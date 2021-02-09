@@ -1,4 +1,3 @@
-
 var cuisine = [
     { cuisine_name: "Afghan", cuisine_id: "1035" },
     { cuisine_name: "African", cuisine_id: "152" },
@@ -102,8 +101,9 @@ var cuisine = [
     { cuisine_name: "Vegetarian", cuisine_id: "308" },
     { cuisine_name: "Venezuelan", cuisine_id: "641" },
     { cuisine_name: "Vietnamese", cuisine_id: "99" }
-]
-
+];
+var resultsEl = document.querySelector(".searchResults");
+resultsEl.hidden = "true";
 var userRestSearch = [];
 var cuisineDropDownID = [];
 var cuisineDropDownName = [];
@@ -113,6 +113,20 @@ var restaurantLat = [];
 var restaurantImg = [];
 var restaurantUrl = [];
 var restaurantMenu = [];
+var restaurantCuis = [];
+var restaurantAdd = [];
+var restaurantInfo = [
+    { restaurantList },
+    { restaurantLat },
+    { restaurantLong },
+    { restaurantImg },
+    { restaurantUrl },
+    { restaurantMenu },
+    { restaurantCuis },
+    { restaurantAdd }
+]
+var searches = [];
+var lists = [];
 
 
 
@@ -133,14 +147,13 @@ for (i = 0; i < cuisine.length; i++) {
 
 
 
-
 //var googleMap = document.querySelector("#map");
 function handleSearchFormSubmit(event) {
     event.preventDefault();
 
+
     var searchInputVal = document.querySelector(".searchCity").value;
     var dropInputVal = document.querySelector(".select").value;
-    var dropInputText = document.querySelector(".select").textContent;
     userRestSearch.push(searchInputVal);
     cuisineDropDownID.push(dropInputVal);
 
@@ -172,18 +185,21 @@ function handleSearchFormSubmit(event) {
             console.log(cityid);
             cuisineSearch(dropInputVal, cityid);
         })
+        .catch(function () {
 
+            swal("Oops!", "Something went wrong with your search! Try again", "error");
 
+            return;
+        })
 
 }
 
 function cuisineSearch(dropInputVal, cityid) {
-
+    console.log("I'M BEING CALLED")
     console.log(dropInputVal);
     restaurantTwoURL = "https://developers.zomato.com/api/v2.1/search?entity_id=" + cityid + "&entity_type=city&cuisines=" + dropInputVal
     console.log(restaurantTwoURL)
     fetch(restaurantTwoURL, {
-        // credentials: 'include',
         headers: { "user-key": "6c1c69e843bf3372eb5e6a5fae766fcf" }
     })
 
@@ -195,74 +211,108 @@ function cuisineSearch(dropInputVal, cityid) {
         })
         .then(function (data) {
             console.log(data);
+
+            var restaurantSearch = [];
             for (i = 0; i < data.restaurants.length; i++) {
+
                 var restNames = data.restaurants[i].restaurant.name;
                 var restLong = data.restaurants[i].restaurant.location.longitude;
                 var restLat = data.restaurants[i].restaurant.location.latitude;
-                var restImg = data.restaurants[i].restaurant.featured_image;
+                var restImg = data.restaurants[i].restaurant.thumb;
                 var restUrl = data.restaurants[i].restaurant.url;
                 var restMenu = data.restaurants[i].restaurant.menu_url;
-                console.log(restNames);
-                restaurantList.push(restNames);
-                restaurantLat.push(restLat);
-                restaurantLong.push(restLong);
-                restaurantImg.push(restImg);
-                restaurantUrl.push(restUrl);
-                restaurantMenu.push(restMenu);
+                var restCuisine = data.restaurants[i].restaurant.cuisines;
+                var restAddress = data.restaurants[i].restaurant.location.address;
+                restaurantSearch.push({
+                    restNames,
+                    restLong,
+                    restLat,
+                    restImg,
+                    restUrl,
+                    restMenu,
+                    restCuisine,
+                    restAddress
+                })
+
             }
-            console.log(restaurantList)
-            console.log(restaurantLat)
-            console.log(restaurantLong)
+
+            console.log("HERE", restaurantSearch)
+            searches.push(restaurantSearch);
+            console.log(searches)
+            window.localStorage.setItem("restaurant_search", JSON.stringify(searches));
             restList();
-            initMap();
+            // initMap();
 
         })
+        .catch(function () {
+            swal("Oops!", "Something went wrong with your search! Try again", "error");
+            return;
+        });
 
 
 }
 
 function restList() {
-    for (i = 0; i < restaurantList.length; i++) {
+    resultsEl.hidden = false;
+    var localData = JSON.parse(localStorage.getItem("restaurant_search"))
+    console.log("d8a", localData)
+    document.querySelector(".results").innerHTML = ""
+    for (i = 0; i < (localData[localData.length - 1].length); i++) {
         var restNameEl = document.createElement("div");
-<<<<<<< Updated upstream
-        restNameEl.className = ("dropdown is-active column is-full");
-        var restNameElTrig = document.createElement("div");
-        restNameElTrig.className = ("dropdown-trigger");
-        restNameEl.appendChild(restNameElTrig);
-        var button = ("<button class='button is-fullwidth' aria-haspopup='true' aria-controls='dropdown-menu2'>"
-        + "<span>" + (restaurantList[i]) + "</span>" +
-         "<span class='icon is-small'> <i class='fas fa-angle-down' aria-hidden='true'></i>" +
-          "</span>" + "</button>")
-        restNameElTrig.innerHTML =button;
-        document.querySelector(".buttons").append(restNameEl);
-       // var restNamecardTitle = document.createElement("div");
-       // restNamecardTitle.className = ("card-header");
-
-    
-      
-     
-  /*<div class="dropdown-menu" id="dropdown-menu2" role="menu">
-    <div class="dropdown-content"></div>
-        div class="dropdown is-active">
-        <div class="dropdown-trigger">*/
-        //var restNameElContent = document.createTextNode(restaurantList[i])
-       // restNameEl.appendChild(restNamecardTitle)
-       // console.log(restNameElContent)
-       // restNamecardTitle.appendChild(restNameElContent)
-=======
         restNameEl.className = ("card restResults");
         var cardContent = ("<header class='card-header restResultsHeader'><p class='card-header-title restResultsTitle'>" +
-        (restaurantList[i])+ "</p><select><option>Add to List</option></select></header>" + 
-        "<div class='card-content'> <div class='media'><div class='media-left'><figure class='image is-48x48'><img src=" + restaurantImg[i] + 
-        "></figure></div><div class='content'>" +
-       "<p>" + restaurantAdd[i] + "</p>" + "<p>" +restaurantCuis[i] + "</p></div></div>"
+            localData[(localData.length - 1)][i].restNames + "</p><button class='button listButton'>Add to List</button></header>" +
+            "<div class='card-content'> <div class='media'><div class='media-left'><figure class='image is-48x48'><img src=" + localData[(localData.length - 1)][i].restImg +
+            "></figure></div><div class='content'>" +
+            "<p>" + localData[(localData.length - 1)][i].restAddress + "</p>" + "<p>" + localData[(localData.length - 1)][i].restCuisine + "</p></div></div>"
         )
-        restNameEl.innerHTML =cardContent;
+
+        restNameEl.innerHTML = cardContent;
         document.querySelector(".results").append(restNameEl);
->>>>>>> Stashed changes
-        
-    }
+
+
+
+    };
+
+
+
+
+    $(".listButton").on("click", function () {
+        console.log($(this))
+        var restName = ($(this).siblings(".restResultsTitle").text())
+        swal(
+            {
+                title: "Add to List!",
+                text: "Add to an existing list or create a new one",
+                content: "input",
+                buttons: {
+
+                    Add: {
+                        text: "Add",
+                        confirm: true
+                    },
+                    Close: {
+                        text: "Close",
+                        closeModal: true
+                    }
+                }
+            })
+            $(".swal-button--Add").on("click", function () {
+                listName = document.querySelector(".swal-content__input").value;
+               
+                console.log("test")
+                lists.push( {listName,restName}); 
+                localStorage.setItem("list_names", JSON.stringify(lists));
+            })
+
+
+
+      
+    })
 }
+
+
+
 
 //"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" +restaurantLat[0] + "," +restaurantLong[0]+ "&radius=1500&type=restaurant&keyword=" +restaurantList[0] +"&key=AIzaSyB5txYIT-JDscslwZuBHw0NbgQIf7Qear0&callback=initMap"
 
@@ -277,6 +327,7 @@ script.defer = true;
 
 
 function initMap() {
+
     document.head.appendChild(script);
 
     var sydney = new google.maps.LatLng(restaurantLat[0], restaurantLong[0]);
@@ -293,21 +344,21 @@ function initMap() {
    query: (restaurantList[0]),
    fields: ['name'],
  };
-
+ 
  var service = new google.maps.places.PlacesService(map);
-
+ 
  service.findPlaceFromQuery(request, function(results, status) {
    if (status === google.maps.places.PlacesServiceStatus.OK) {
      for (var i = 0; i < results.length; i++) {
        createMarker(results[i]);
      }
-
+ 
    }
  });
 }
-
-
-
+ 
+ 
+ 
 //window.initMap = function () {
 //   map = new google.maps.Map(document.getElementById("map"), {
  //      center: { lat: -34.397, lng: 150.644 },
@@ -315,8 +366,8 @@ function initMap() {
  //  });
 //}
 // JS API is loaded and available
-
-
+ 
+ 
 // Append the 'script' element to 'head'*/
 
 
